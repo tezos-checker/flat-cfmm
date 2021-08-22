@@ -68,6 +68,7 @@ type update_cash_pool_internal = update_fa12_pool
 #endif
 
 type entrypoint =
+| Default of unit
 | AddLiquidity    of add_liquidity
 | RemoveLiquidity of remove_liquidity
 | CashToToken     of cash_to_token
@@ -344,7 +345,7 @@ let util (x: nat) (y: nat) : nat * int =
     let minus_4 = minus_2 * minus_2 in
     let minus_8 = minus_4 * minus_4 in
     let minus_7 = minus_8 / minus in
-    (abs (plus_8 - minus_8), - 8 * (minus_7 + plus_7))
+    (abs (plus_8 - minus_8), 8 * (minus_7 + plus_7))
 
 type newton_param =  {x : nat ; y : nat ; dx : nat ; dy : nat ; u : nat ; n : int}
 
@@ -353,7 +354,7 @@ let rec newton (p : newton_param) : nat =
         p.dy
     else
         let new_u, new_du_dy = util (p.x + p.dx) (abs (p.y - p.dy)) in
-        let dy = p.dy + abs ((p.u - new_u) / new_du_dy) in
+        let dy = p.dy + abs ((new_u - p.u) / new_du_dy) in
         newton {p with dy = dy ; n = p.n - 1}
 
 let tokensBought (cashPool : nat) (tokenPool : nat) (cashSold : nat) : nat =
@@ -362,13 +363,13 @@ let tokensBought (cashPool : nat) (tokenPool : nat) (cashSold : nat) : nat =
     (* 4 round is enough for most cases and underestimates the true payoff, so the user
         can always break up a trade for better terms *)
     let u, _ = util x y in
-    newton {x = x; y = y ; dx = cashSold ; dy = 0n ; u = u ; n = 4}
+    (newton {x = x; y = y ; dx = cashSold * price_num; dy = 0n ; u = u ; n = 4}) / price_denom
 
 let cashBought (cashPool : nat) (tokenPool : nat) (tokenSold : nat) : nat =
     let x = tokenPool * price_denom  in
     let y = cashPool * price_num in
     let u, _ = util x y in
-    newton {x = x; y = x ; dx = tokenSold ; dy = 0n ; u = u ; n = 4}
+    (newton {x = x; y = y ; dx = tokenSold * price_denom ; dy = 0n ; u = u ; n = 4}) / price_num
 
 let cash_to_token (param : cash_to_token) (storage : storage) =
    let { to_ = to_ ;
@@ -383,9 +384,7 @@ let cash_to_token (param : cash_to_token) (storage : storage) =
     else begin
         (* We don't check that xtzPool > 0, because that is impossible
            unless all liquidity has been removed. *)
-        let cashPool = storage.cashPool in
         let tokens_bought =
-
             (let bought = const_fee * (tokensBought storage.cashPool storage.tokenPool cashSold) / const_fee_denom in
             if bought < minTokensBought then
                 (failwith error_TOKENS_BOUGHT_MUST_BE_GREATER_THAN_OR_EQUAL_TO_MIN_TOKENS_BOUGHT : nat)
@@ -437,7 +436,7 @@ let token_to_cash (param : token_to_cash) (storage : storage) =
         ([op_token; op_cash], storage)
 
 
-let default_ (storage : storage) : result =
+let default_ () : result =
 (* Entrypoint to allow depositing tez. *)
     (failwith error_TEZ_DEPOSIT_WOULD_BE_BURNED : result)
 
@@ -504,7 +503,7 @@ let update_fa2_pool_internal (pool_update : update_fa2_pool) : nat =
           shenanigans to worry about unless the token contract misbehaves. *)
         match pool_update with
         | [] -> (failwith error_INVALID_FA2_BALANCE_RESPONSE : nat)
-        | x :: xs -> x.1
+        | x :: _xs -> x.1
 
 let update_token_pool_internal (pool_update : update_token_pool_internal) (storage : storage) : result =
     if (storage.pendingPoolUpdates = 0n or Tezos.sender <> storage.tokenAddress) then
@@ -537,6 +536,7 @@ let update_cash_pool_internal (pool_update : update_cash_pool_internal) (storage
 
 let main ((entrypoint, storage) : entrypoint * storage) : result =
     match entrypoint with
+    | Default -> default_ ()
     | AddLiquidity param ->
         add_liquidity param storage
     | RemoveLiquidity param ->
