@@ -6,7 +6,7 @@ This makes it suitable to create a CFMM between two assets which ought to be peg
 
 Based on the generic cfmm in the ctez repo which is itself based on dexter v2.
 
-Untested!
+Barely tested!
 
 ## The curve
 
