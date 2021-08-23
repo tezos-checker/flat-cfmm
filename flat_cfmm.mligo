@@ -334,9 +334,9 @@ let remove_liquidity (param : remove_liquidity) (storage : storage) : result =
     end
 
 
-let util (x: nat) (y: nat) : nat * int =
+let util (x: nat) (y: nat) : nat * nat =
     let plus = x + y in
-    let minus = abs (x - y)  in
+    let minus = x - y  in
     let plus_2 = plus * plus in
     let plus_4 = plus_2 * plus_2 in
     let plus_8 = plus_4 * plus_4 in
@@ -345,7 +345,9 @@ let util (x: nat) (y: nat) : nat * int =
     let minus_4 = minus_2 * minus_2 in
     let minus_8 = minus_4 * minus_4 in
     let minus_7 = minus_8 / minus in
-    (abs (plus_8 - minus_8), 8 * (minus_7 + plus_7))
+    (* minus_7 + plus_7 should always be positive *)
+    (* since x >0 and y > 0, x + y > x - y and therefore (x + y)^7 > (x - y)^7 and (x + y^7 - (x - y)^7 > 0 *)
+    (abs (plus_8 - minus_8), 8n * (abs (minus_7 + plus_7)))
 
 type newton_param =  {x : nat ; y : nat ; dx : nat ; dy : nat ; u : nat ; n : int}
 
@@ -354,7 +356,9 @@ let rec newton (p : newton_param) : nat =
         p.dy
     else
         let new_u, new_du_dy = util (p.x + p.dx) (abs (p.y - p.dy)) in
+        (* new_u - p.u > 0 because dy remains an underestimate *)
         let dy = p.dy + abs ((new_u - p.u) / new_du_dy) in
+        (* dy is an underestimate because we start at 0 and the utility curve is convex *)
         newton {p with dy = dy ; n = p.n - 1}
 
 let tokensBought (cashPool : nat) (tokenPool : nat) (cashSold : nat) : nat =
