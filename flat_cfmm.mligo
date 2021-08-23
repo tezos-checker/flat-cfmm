@@ -367,13 +367,13 @@ let tokensBought (cashPool : nat) (tokenPool : nat) (cashSold : nat) : nat =
     (* 4 round is enough for most cases and underestimates the true payoff, so the user
         can always break up a trade for better terms *)
     let u, _ = util x y in
-    (newton {x = x; y = y ; dx = cashSold * price_num; dy = 0n ; u = u ; n = 4}) / price_denom
+    (newton {x = x; y = y ; dx = cashSold * price_num; dy = 0n ; u = u ; n = 5}) / price_denom
 
 let cashBought (cashPool : nat) (tokenPool : nat) (tokenSold : nat) : nat =
     let x = tokenPool * price_denom  in
     let y = cashPool * price_num in
     let u, _ = util x y in
-    (newton {x = x; y = y ; dx = tokenSold * price_denom ; dy = 0n ; u = u ; n = 4}) / price_num
+    (newton {x = x; y = y ; dx = tokenSold * price_denom ; dy = 0n ; u = u ; n = 5}) / price_num
 
 let cash_to_token (param : cash_to_token) (storage : storage) =
    let { to_ = to_ ;
