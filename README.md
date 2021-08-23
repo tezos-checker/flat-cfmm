@@ -14,6 +14,7 @@ Barely tested!
 
 To give some sense, when the two assets are held in equal amounts, 78% of the pool can be bought for a slippage of less than 5%.
 
-![Slippage for constant product, sum, and the compromise](https://user-images.githubusercontent.com/1591742/130374323-7e040a68-197a-4f3b-85f4-a5d625d8b220.png)
+![Slippage for constant product, sum, and the compromise](https://user-images.githubusercontent.com/1591742/130378341-f34f2a06-e860-4ec0-997f-0812990746f6.png)
+
 
 
