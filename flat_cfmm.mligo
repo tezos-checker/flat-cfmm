@@ -344,7 +344,7 @@ let util (x: nat) (y: nat) : nat * nat =
     let minus_2 = minus * minus in
     let minus_4 = minus_2 * minus_2 in
     let minus_8 = minus_4 * minus_4 in
-    let minus_7 = minus_8 / minus in
+    let minus_7 = if minus = 0 then 0 else minus_8 / minus in
     (* minus_7 + plus_7 should always be positive *)
     (* since x >0 and y > 0, x + y > x - y and therefore (x + y)^7 > (x - y)^7 and (x + y^7 - (x - y)^7 > 0 *)
     (abs (plus_8 - minus_8), 8n * (abs (minus_7 + plus_7)))
